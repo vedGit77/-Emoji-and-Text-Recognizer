@@ -34,13 +34,12 @@ For Letters: https://www.kaggle.com/datasets/crawford/emnist<br/>
 For Emojis: https://drive.google.com/drive/folders/1meYgZK1uobXM2F-2dHQjt_iWY2qlFVce?usp=sharing<br/>
 
 </br>
+</br>
 
 **We tested our model on various sample images and here are the results** 
-
-</br>
-</br>
 
 **Note :-** All the images are drawn on Microsoft Whiteboard</br>
 </br>
 </br>
 ![sample_1](https://github.com/MoCaWinners/Emoji-and-Text-Recognizer/blob/main/images/sample_1.png?raw=true)
+![sample_2](https://github.com/MoCaWinners/Emoji-and-Text-Recognizer/blob/main/images/sample_2.png?raw=true)
