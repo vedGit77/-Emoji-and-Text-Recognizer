@@ -36,8 +36,10 @@ For Emojis: https://drive.google.com/drive/folders/1meYgZK1uobXM2F-2dHQjt_iWY2ql
 </br>
 </br>
 **We tested our model on various sample images and here are the results** 
+
 </br>
 </br>
+
 **Note :-** All the images are drawn on Microsoft Whiteboard</br>
 </br>
 </br>
