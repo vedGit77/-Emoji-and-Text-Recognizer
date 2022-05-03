@@ -43,3 +43,4 @@ For Emojis: https://drive.google.com/drive/folders/1meYgZK1uobXM2F-2dHQjt_iWY2ql
 </br>
 ![sample_1](https://github.com/MoCaWinners/Emoji-and-Text-Recognizer/blob/main/images/sample_1.png?raw=true)
 ![sample_2](https://github.com/MoCaWinners/Emoji-and-Text-Recognizer/blob/main/images/sample_2.png?raw=true)
+![sample_3](https://github.com/MoCaWinners/Emoji-and-Text-Recognizer/blob/main/images/sample_3.png?raw=true)
