@@ -8,8 +8,8 @@ Original file is located at
 """
 
 import cv2
-import os
-import segmentation as seg #segmantation_1 is saved in the mosaic folder in drive
+import os  #to interact with os => perform directory management
+import segmentation as seg  #segmentation.py => saved in the mosaic folder in drive => download it and use
 from tensorflow.keras.models import load_model
 import numpy as np
 
