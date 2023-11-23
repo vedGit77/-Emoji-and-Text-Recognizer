@@ -1,0 +1,5 @@
+# with_bitwise_and_thresh.h5   errors:   heart, croissant, sometimes cloud, segmentation fails many times
+# with_thresh_bitwise_aug       errors:    sun, cloud , croissant, heart, checkmark, smile
+# without_(bitwise_&&_thresh).h5   errors:    checkmark, cloud, heart, sun, croissant, smile
+# with_thresh     errors:    sun, cloud, checkmark, croissant, heart
+# with_thresh     errors:    sun, cloud, heart, checkmark, croissant, smile
