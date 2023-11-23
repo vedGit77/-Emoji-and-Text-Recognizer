@@ -9,7 +9,7 @@ Original file is located at
 
 import cv2
 import os
-import segmentation_1 as seg #segmantation_1 is saved in the mosaic folder in drive
+import segmentation as seg #segmantation_1 is saved in the mosaic folder in drive
 from tensorflow.keras.models import load_model
 import numpy as np
 
