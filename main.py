@@ -19,65 +19,51 @@ drive.mount('/content/drive')
 model_text = load_model('/content/drive/My Drive/model_only_letters_byclass_1.h5',compile=True) #emnist letters
 model_emoji = load_model('/content/drive/My Drive/with_bitwise_and_thresh.h5',compile=True) #without aug
 
-# model = load_model('new_model_vedant_1.h5',compile=True)
 classes='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-    
-
-# with_bitwise_and_thresh.h5   errors:   heart, croissant, sometimes cloud, segmentation fails many times
-# with_thresh_bitwise_aug       errors:    sun, cloud , croissant, heart, checkmark, smile
-# without_(bitwise_&&_thresh).h5   errors:    checkmark, cloud, heart, sun, croissant, smile
-# with_thresh     errors:    sun, cloud, checkmark, croissant, heart
-# with_thresh     errors:    sun, cloud, heart, checkmark, croissant, smile
-
 
 def predict(image):
-    image=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    img_paths=seg.extract_character(image)
-    output=' '
+    image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)  #coloured 2 grayscale
+    img_paths = seg.extract_character(image)  #get numpy array of individual images after segmentation
+    output = ' '
+
     for i in img_paths:
-        m=[]
-        flag=0
-        img=cv2.imread(i,cv2.IMREAD_GRAYSCALE)
-        img = cv2.bitwise_not(img)
-        img=np.reshape(img,(28,28,1))/255
+        m = []
+        flag = 0
+        img = cv2.imread(i,cv2.IMREAD_GRAYSCALE)  # i is image path, IMREAD_GRAYSCALE means it will be read in grayscale
+        img = cv2.bitwise_not(img)                #invert pixels => white/black
+        img = np.reshape(img,(28,28,1))/255       # (28*28*1) dimensions => 1 channel, /255 since normalize in range [0,1]
         m.append(img)
-        m=np.array(m)
-        result = np.argmax(model_text.predict(m))
-        predictions = model_text.predict(m)
-        p_max = np.amax(predictions)
-        # p_min= np.amin(predictions)
-        # p_avg =  np.mean(predictions)
-        # print(p_max, p_min, p_avg)
-        # print(predictions)
+        m = np.array(m)
+        result = np.argmax(model_text.predict(m))  #result => assigned INDEX of class with highest predicted probability
+        predictions = model_text.predict(m)  #predictions=> assigned the OUTPUT from model
+        p_max = np.amax(predictions)  #value of the max probability
 
-        # print(p_max)
+
         if(p_max<0.95):
-          result = np.argmax(model_emoji.predict(m))
+          result = np.argmax(model_emoji.predict(m))   #if model_txt is working poor => take model_emoji
           predictions = model_emoji.predict(m)
-          flag=1
-
-        if(classes[result]=='v' or classes[result]=='V'): #confusion bw checkmark and v/V
-           result = np.argmax(model_emoji.predict(m))
-        elif( classes[result]=='Q'): #confusion bw smile/laugh and Q
-           result = np.argmax(model_emoji.predict(m))
-        # else:
+          flag = 1
+          
         if (flag==0):
-          output+=classes[result]
+          output += classes[result]
         else:
-          output+=(classes[result+1])
+          output += classes[result+1]   #since mapping in emojis is from 1
     return output
 
-    
+
 def test():
-    #Enter filenames to be tested in image_paths after adding them to this folder
-    image_paths=['/content/drive/MyDrive/mosaic/807.png']
-    for i in image_paths:
-        image=cv2.imread(i)
-        captcha_decoded = predict(image)
-        print(captcha_decoded)
-        # # results = model.predict(image)
-        # for r in captcha_decoded:
-        #     print(str(r))
+      image_paths=['/content/drive/MyDrive/mosaic/818.jpg']
+      for i in image_paths:
+          image=cv2.imread(i)
+          captcha_decoded = predict(image)
+          print(captcha_decoded)
+
+      image_paths=['/content/drive/MyDrive/mosaic/811.jpg']
+      for i in image_paths:
+          image=cv2.imread(i)
+          captcha_decoded = predict(image)
+          print(captcha_decoded)
+      
 
 if __name__=='__main__':
     test()
