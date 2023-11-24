@@ -15,218 +15,88 @@ from google.colab.patches import cv2_imshow
 
 
 
-# from google.colab import drive
-# drive.mount('/content/drive')
-
-# img = cv2.imread('/content/drive/MyDrive/mosaic/Emoji_Dataset/checkmark/00A33720-8556-4FDE-A692-4328B2A20886.jpg', cv2.IMREAD_GRAYSCALE)
-
-# cv2_imshow(img)
-
-
-
 def getMeanArea(contours):
     meanArea=0
     for contour in contours:
-        # print(cv2.contourArea(contour))
-        meanArea+=cv2.contourArea(contour)
+        meanArea += cv2.contourArea(contour)
     meanArea=(meanArea)/len(contours)
     return meanArea
 
 
-def meanX(contours):
-
-    meanX=0
-    
-    for contour in contours:
-        x,y,w,h=cv2.boundingRect(contour)
-        # print(cv2.contourArea(contour))
-        meanX+=x
-    meanX=(meanX)/len(contours)
-    return meanX
-
-
 
 def meanY(contours):
-
     meanY=0
     
     for contour in contours:
         x,y,w,h=cv2.boundingRect(contour)
-        # print(cv2.contourArea(contour))
         meanY+=y
     meanY=(meanY)/len(contours)
     return meanY
+
 
 
 def getMeanAreaa(contours):
     meana=0
     for contour in contours:
         x,y,w,h = cv2.boundingRect(contour)
-        # print(w*h)
         meana+=w*h
-    
-  
+
     meana=(meana)/len(contours)
     return meana
 
 
-def meanH(contours):
-    meanh=0
-    for contour in contours:
-        x,y,w,h = cv2.boundingRect(contour)
-        # print(w*h)
-        meanh+=h
-    
-  
-    meanh=(meanh)/len(contours)
-    return meanh
-
-def mod(num):
-  if num>0:
-    return num
-  else:
-    return num*-1
-    
-    
-def getRatioArea(contours):
-    meanArea=0
-    for contour in contours:
-        meanArea+=cv2.contourArea(contour)
-    cnsSorted = sorted(contours, key=lambda x:cv2.contourArea(x), reverse = True)
-    ratioArea = cv2.contourArea(cnsSorted[0])/meanArea
-    return ratioArea
-
-
-def purify(img):
-    img=cv2.copyMakeBorder(img,32,32,32,32,cv2.BORDER_CONSTANT)
-    #cv2.imshow('img',img)
-    #cv2.waitKey(0)
-    #img=cv2.bitwise_not(img)
-    #kernel=np.ones((3,3),np.uint8)
-    #cv2.dilate(img,kernel,iterations=5)
-    #cv2.erode(img,kernel,iterations=5)
-    #img=cv2.morphologyEx(img,cv2.MORPH_OPEN,kernel)
-    contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    meanArea=getMeanArea(contours)
-    nlabels,labels,stats,centroids=cv2.connectedComponentsWithStats(img,None,None,None,8,cv2.CV_32S)
-    areas=stats[1:,cv2.CC_STAT_AREA]
-    result=np.zeros((labels.shape),np.uint8)
-    for i in range(nlabels-1):
-        if areas[i]>=0.05*meanArea:
-            result[labels==i+1]=255
-    high=max(result.shape[0],result.shape[1])
-    if high==result.shape[0]:
-        dif=(high-result.shape[1])//2
-        result=cv2.copyMakeBorder(result,0,0,dif,dif,cv2.BORDER_CONSTANT,value=0)
-    else:
-        dif=(high-result.shape[1])//2
-        result=cv2.copyMakeBorder(result,dif,dif,0,0,cv2.BORDER_CONSTANT,value=0)
-    # cv2_imshow(result)
-    #print(result.shape)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-    return cv2.resize(result,(28,28),interpolation=cv2.INTER_AREA)
-
-
-# purify(img)
-
 
 def extract_character(image, recursion = 0):
-    thresh = cv2.copyMakeBorder(image, 8, 8, 8, 8, cv2.BORDER_REPLICATE)
-    pad=5
-    thresh=cv2.GaussianBlur(thresh, (3,3), 0)
-    #thresh=cv2.medianBlur(image,3)
-    #thresh = cv2.adaptiveThreshold(thresh, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV, blockSize = 321, C = 28)
-    ret,thresh=cv2.threshold(thresh,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-    #cv2.imshow('thresh2',thresh)
-    #cv2.waitKey(0)
-    #cv2.imshow('Thresh',thresh)
+    thresh = cv2.copyMakeBorder(image, 8, 8, 8, 8, cv2.BORDER_REPLICATE)  #make border of 8 pixels in all drxn => BORDER_REPLICATE means => outermost pixel replicated => thus black border
+    thresh = cv2.GaussianBlur(thresh, (3,3), 0)  # (3*3) kernel, standard dev. = 0  => means internally calculates standard dev.
+    ret,thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)  #threshold => based on OTSU method => find optimal threshold based on the neighbourhood => applied thresh_binary => convert to binary and inverse
+    # thresholding after greyscale => since in BGR => 3 channels => complicated
+    # morphological operations are applied ONLY on binary images
     kernel1 = np.ones((3,3), np.uint8)
-    thresh = cv2.dilate(thresh, kernel1, iterations = 1)
-    #thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel3)
+    kernel2 = np.ones((2,2), np.uint8)
+    thresh = cv2.dilate(thresh, kernel1, iterations = 1)  #dialate using (3*3) kernel
+    thresh = cv2.erode(thresh, kernel2, iterations = 2)   #erode using (2*2) kernel => twice
+    thresh = cv2.dilate(thresh, kernel1, iterations = 1)  #dialate using (3*3) kernel
 
+    # finding the contours
+    # RETR_EXTERNAL => gets ONLY extreme outer contours => ignores contours inside the image (nested contours)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  
 
-
-    if(recursion<2):
-    	thresh2 = cv2.erode(thresh, np.ones((2,2), np.uint8), iterations = 2)
-    	# thresh2 = scipy.ndimage.median_filter(thresh2, (5, 1)) # remove line noise  
-    	thresh2 = scipy.ndimage.median_filter(thresh2, (1, 5)) # weaken circle noise
-    	thresh2 = scipy.ndimage.median_filter(thresh2, (5, 1)) # remove line noise
-    	thresh2 = scipy.ndimage.median_filter(thresh2, (1, 5)) # weaken circle noise
-    	contours1, hierarchy = cv2.findContours(thresh2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    else:
-     contours1, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # coords=[]
-    # count=0
-
-
-    ratioArea = getRatioArea(contours1)
-    #print(ratioArea)
-    if(ratioArea<0.3 or recursion>1):
-    	kernel2 = np.ones((2,2), np.uint8)
-    elif(ratioArea>0.85 and recursion<1):
-    	kernel2 = np.ones((5,5), np.uint8)
-    else:
-    	kernel2 = np.ones((3,3), np.uint8)
-    if(ratioArea > 0.3 and recursion<2):
-    	thresh = cv2.erode(thresh, kernel2, iterations = 2)
-    	thresh = scipy.ndimage.median_filter(thresh, (5, 1)) # remove line noise
-    	thresh = scipy.ndimage.median_filter(thresh, (1, 5)) # weaken circle noise
-    	thresh = scipy.ndimage.median_filter(thresh, (5, 1)) # remove line noise
-    	thresh = scipy.ndimage.median_filter(thresh, (1, 5)) # weaken circle noise
-    thresh = cv2.dilate(thresh, kernel1, iterations = 1)
-    #cv2.imshow('thresh',thresh)
-    #cv2.waitKey(0)
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     coords=[]
     count=0
-    meanAreaa=getMeanAreaa(contours)
-    # print(meanAreaa)
-    meanArea=getMeanArea(contours)
-    # print(meanArea)
-
-
-
+    meanArea = getMeanArea(contours)   #mean contour areas
     meany = meanY(contours)
-    meanx = meanX(contours)
-    meanh = meanH(contours)
+    
     for contour in contours:
-        
-        # print("KHGFK")
-        (x,y,w,h)=cv2.boundingRect(contour)
-        # print(y)
-        # print(cv2.contourArea(contour))
-        # print(w*h)
-        # if cv2.contourArea(contour)>0.5* meanArea:
-        # if (cv2.contourArea(contour)>0.5* meanArea or w*h>0.2*meanAreaa) and y>meany and h<0.5*meanh):
-        if (cv2.contourArea(contour)>0.5* meanArea or w*h>0.2*meanAreaa) and (y+h>meany or cv2.contourArea(contour)>0.7* meanArea):
-          # coords.append((x, y, w, h))
-          # count+=1
+        (x,y,w,h) = cv2.boundingRect(contour)
 
-            if w / h > 3.5:
-              if cv2.contourArea(contour)>0.6* meanArea:
-                #Split it in half into two letter regions
-                half_width = int(w / 2)
-                coords.append((x, y, half_width, h))
-                coords.append((x + half_width, y, half_width, h))
-                count=count+2
+        if (cv2.contourArea(contour)>0.5* meanArea or w*h>0.5*meanArea) and (y+h>meany or cv2.contourArea(contour)>0.7* meanArea):
+            if w / h > 3.5:                               
+                if cv2.contourArea(contour) > 0.6 * meanArea:  #then split into 2 segments
+                    half_width = int(w / 2)
+                    coords.append((x, y, half_width, h))
+                    coords.append((x + half_width, y, half_width, h))
+                    count = count+2
             else:  
                 coords.append((x, y, w, h))
-                count=count+1
-    coords=sorted(coords,key=lambda x: x[0])
+                count = count+1
+    
+    coords = sorted(coords,key=lambda x: x[0])     #sort contours
     img_paths=[]
-    # print(count)
+
     if(count >1 and recursion <3):
     	img_paths_array = extract_character(image, recursion + 1)
     	return img_paths_array
     else:
-    	for i in range(count):
-        	result=purify(thresh[coords[i][1]:coords[i][1]+coords[i][3],coords[i][0]:coords[i][0]+coords[i][2]])
-        	cv2_imshow(result)
-        	#cv2.waitKey(0)
-        	filename='character'+str(i)+'.jpeg'
-        	cv2.imwrite(filename,cv2.bitwise_not(result))
-        	img_paths.append(filename)
-    	return np.array(img_paths)
+      for i in range(count):
+        result = thresh[coords[i][1]:coords[i][1]+coords[i][3], coords[i][0]:coords[i][0]+coords[i][2]]
+        target_width = 30  # desired width
+        aspect_ratio = result.shape[1] / result.shape[0]
+        target_height = int(target_width / aspect_ratio)
+        resized_image = cv2.resize(result, (target_width, target_height))
+        cv2_imshow(resized_image)
+      for i in range(count):
+        filename = 'character'+str(i)+'.jpeg'
+        img_paths.append(filename)
 
-# extract_character(img)
+    return np.array(img_paths)
